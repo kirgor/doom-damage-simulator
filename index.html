@@ -115,8 +115,9 @@
         <h2>Results (with <span id="pelletsInfo"></span> pellets shot):</h2>
     </div>
     <div>
+        <p>Total shots <span id="totalShots"></span>:</p>
         <p>Damage distribution (how many simulated shots happened to deal that damage):</p>
-        <canvas id="damageDistributionsChart" width="600" height="100"></canvas>
+        <canvas id="damageDistributionsChart" width="600" height="250"></canvas>
     </div>
     <div>
         <p>Maximum damage per extra RNG calls:</p>
@@ -150,6 +151,7 @@
 
             let data = calcForParametersRange(pellets, extraRandomCallsFrom, extraRandomCallsTo);
 
+            document.getElementById('totalShots').innerText = data.totalShots.toString();
             document.getElementById('pelletsInfo').innerText = pellets.toString();
             drawAllDamageDistributionsStacked(data);
             drawMaxDamagesByExtraRngCalls(data);

@@ -69,10 +69,12 @@ function calcForParametersRange(pellets, extraRandomCallsFrom, extraRandomCallsT
     let possibleDamageValues = getShotgunDamagePossibleValues(pellets);
 
     let results = [];
+    let totalShots = 0;
     for (let i = extraRandomCallsFrom; i <= extraRandomCallsTo; i++) {
         let damageFromAllRandomStates = getShotgunDamageFromAllRandomStates(pellets, i);
         let maxDamage = Math.max.apply(null, damageFromAllRandomStates);
         let damageDistribution = getDistribution(possibleDamageValues, damageFromAllRandomStates);
+        totalShots += damageFromAllRandomStates.length;
 
         results.push({
             extraRandomCalls: i,
@@ -81,6 +83,6 @@ function calcForParametersRange(pellets, extraRandomCallsFrom, extraRandomCallsT
         })
     }
 
-    return {results, possibleDamageValues};
+    return {results, possibleDamageValues, totalShots};
 }
 
