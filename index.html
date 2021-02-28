@@ -68,18 +68,18 @@
             </li>
         </ul>
         <p>You can tweak simulation parameters (explained below), and there are two handy presets available.</p>
-        <p>Shotgun shots 7 pellets and is assumed to have 6 extra <b>P_Random()</b> calls after each pellet:</p>
+        <p>Shotgun shots 7 pellets and is assumed to have 7 extra <b>P_Random()</b> calls after each pellet:</p>
         <ul>
             <li>2 calls for horizontal spread</li>
             <li>1 call for monster pain chance</li>
-            <li>3 calls for spawning blood splatters</li>
+            <li>4 calls for spawning blood splatters</li>
         </ul>
-        <p>Super Shotgun shots 20 pellets and is assumed to have 8 extra <b>P_Random()</b> calls after each pellet:</p>
+        <p>Super Shotgun shots 20 pellets and is assumed to have 9 extra <b>P_Random()</b> calls after each pellet:</p>
         <ul>
             <li>2 calls for horizontal spread</li>
             <li>2 calls for vertical spread</li>
             <li>1 call for monster pain chance</li>
-            <li>3 calls for spawning blood splatters</li>
+            <li>4 calls for spawning blood splatters</li>
         </ul>
         <p>If you feel like there should be less or more extra <b>P_Random()</b> calls - you can test different variations by setting parameters range.</p>
         <p>Setting <i>"Number of extra P_Random() calls"</i> range will run the entire thing many times and combine results.</p>
@@ -97,14 +97,14 @@
         <div>
             <span>Number of extra <b>P_Random() </b>calls for each pellet: </span>
             <label for="extraRandomCallsFrom">from</label>
-            <input id="extraRandomCallsFrom" type="number" min="0" max="255" value="8"/>
+            <input id="extraRandomCallsFrom" type="number" min="0" max="255" value="9"/>
             <label for="extraRandomCallsTo">to</label>
-            <input id="extraRandomCallsTo" type="number" min="0" max="255" value="8"/>
+            <input id="extraRandomCallsTo" type="number" min="0" max="255" value="9"/>
         </div>
         <div>
             <span>Presets: </span>
-            <button onclick="setParams(7, 6, 6)">Shotgun</button>
-            <button onclick="setParams(20, 8, 8)">Super Shotgun</button>
+            <button onclick="setParams(7, 7, 7)">Shotgun</button>
+            <button onclick="setParams(20, 9, 9)">Super Shotgun</button>
         </div>
     </div>
     <div class="simulate">
