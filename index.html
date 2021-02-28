@@ -46,7 +46,7 @@
 <body>
     <h1>Welcome to the DOOM shotgun damage simulator!</h1>
     <div class="simulate">
-        <button onclick="drawResults()">Simulate!</button>
+        <button onclick="drawResults(true)">Simulate!</button>
         <p><i>(scroll down to see simulation results)</i></p>
     </div>
     <div class="manual">
@@ -108,7 +108,7 @@
         </div>
     </div>
     <div class="simulate">
-        <button onclick="drawResults()">Simulate!</button>
+        <button onclick="drawResults(true)">Simulate!</button>
         <p><i>(scroll down to see simulation results)</i></p>
     </div>
     <div id="resultsTop">
@@ -130,7 +130,7 @@
             document.getElementById('extraRandomCallsTo').value = extraRandomCallsTo.toString();
         }
 
-        function drawResults() {
+        function drawResults(autoScroll) {
             let extraRandomCallsTo;
             let pellets;
             let extraRandomCallsFrom;
@@ -154,7 +154,9 @@
             drawAllDamageDistributionsStacked(data);
             drawMaxDamagesByExtraRngCalls(data);
 
-            location.href = '#resultsTop';
+            if (autoScroll) {
+                location.href = '#resultsTop';
+            }
         }
 
         function drawAllDamageDistributionsStacked(data) {
