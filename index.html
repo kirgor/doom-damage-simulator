@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DOOM shotgun damage simulator</title>
+    <script src="simulator.js"></script>
+    <script src="Chart.min.js"></script>
+    <style>
+        input {
+            width: 45px;
+            height: 20px;
+        }
+
+        div {
+            margin-bottom: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .simulate {
+            text-align: center;
+        }
+
+        .simulate button {
+            font-size: 32px;
+            margin: 20px;
+        }
+
+        .manual {
+            padding: 10px;
+            border: cornflowerblue 1px solid;
+            background: rgba(200, 200, 255);
+            font-style: italic;
+        }
+
+        .params {
+            padding: 10px;
+            border: green 1px solid;
+            background: rgba(200, 255, 200);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the DOOM shotgun damage simulator!</h1>
+    <div class="simulate">
+        <button onclick="drawResults()">Simulate!</button>
+        <p><i>(scroll down to see simulation results)</i></p>
+    </div>
+    <div class="manual">
+        <p>This application shows distribution of possible damage output for DOOM II shotguns.</p>
+        <p>It simulates DOOM's <b>P_Random()</b> function using the same static RNG table, which can be found in DOOM source code.</p>
+        <p>Calculation works like this:</p>
+        <ul>
+            <li>
+                Simulation is tried 256 times - for each possible starting RNG value.
+                <ul>
+                    <li>
+                        Because several pellets are shot, following are repeated a number of times:
+                        <ul>
+                            <li>Shotgun pellet damage is determined by single <b>P_Random()</b> call and can be 5, 10 or 15</li>
+                            <li>Several more <b>P_Random()</b> calls are made (explained below)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>You can tweak simulation parameters (explained below), and there are two handy presets available.</p>
+        <p>Shotgun shots 7 pellets and is assumed to have 6 extra <b>P_Random()</b> calls after each pellet:</p>
+        <ul>
+            <li>2 calls for horizontal spread</li>
+            <li>1 call for monster pain chance</li>
+            <li>3 calls for spawning blood splatters</li>
+        </ul>
+        <p>Super Shotgun shots 20 pellets and is assumed to have 8 extra <b>P_Random()</b> calls after each pellet:</p>
+        <ul>
+            <li>2 calls for horizontal spread</li>
+            <li>2 calls for vertical spread</li>
+            <li>1 call for monster pain chance</li>
+            <li>3 calls for spawning blood splatters</li>
+        </ul>
+        <p>If you feel like there should be less or more extra <b>P_Random()</b> calls - you can test different variations by setting parameters range.</p>
+        <p>Setting <i>"Number of extra P_Random() calls"</i> range will run the entire thing many times and combine results.</p>
+        <p>You can also tweak the number of pellets shot beyond standard 7 or 20 because why not.</p>
+        <p>If you wish to check out underlying code, <a href="https://github.com/kirgor/doom-damage-simulator">see this application's GitHub page</a></p>
+    </div>
+    <div class="params">
+        <div>
+            <h2>Parameters:</h2>
+        </div>
+        <div>
+            <label for="pellets">Number of pellets shot:</label>
+            <input id="pellets" type="number" min="1" max="100000" value="20"/>
+        </div>
+        <div>
+            <span>Number of extra <b>P_Random() </b>calls for each pellet: </span>
+            <label for="extraRandomCallsFrom">from</label>
+            <input id="extraRandomCallsFrom" type="number" min="0" max="255" value="8"/>
+            <label for="extraRandomCallsTo">to</label>
+            <input id="extraRandomCallsTo" type="number" min="0" max="255" value="8"/>
+        </div>
+        <div>
+            <span>Presets: </span>
+            <button onclick="setParams(7, 6, 6)">Shotgun</button>
+            <button onclick="setParams(20, 8, 8)">Super Shotgun</button>
+        </div>
+    </div>
+    <div class="simulate">
+        <button onclick="drawResults()">Simulate!</button>
+        <p><i>(scroll down to see simulation results)</i></p>
+    </div>
+    <div id="resultsTop">
+        <h2>Results (with <span id="pelletsInfo"></span> pellets shot):</h2>
+    </div>
+    <div>
+        <p>Damage distribution (how many simulated shots happened to deal that damage):</p>
+        <canvas id="damageDistributionsChart" width="600" height="100"></canvas>
+    </div>
+    <div>
+        <p>Maximum damage per extra RNG calls:</p>
+        <p>Ranges from <b><span id="minMaxDamage"></span></b> to <b><span id="maxMaxDamage"></span></b></p>
+        <canvas id="maxDamagesChart" width="600" height="100"></canvas>
+    </div>
+    <script>
+        function setParams(pellets, extraRandomCallsFrom, extraRandomCallsTo) {
+            document.getElementById('pellets').value = pellets.toString();
+            document.getElementById('extraRandomCallsFrom').value = extraRandomCallsFrom.toString();
+            document.getElementById('extraRandomCallsTo').value = extraRandomCallsTo.toString();
+        }
+
+        function drawResults() {
+            let extraRandomCallsTo;
+            let pellets;
+            let extraRandomCallsFrom;
+            try {
+                pellets = parseInt(document.getElementById('pellets').value);
+                extraRandomCallsFrom = parseInt(document.getElementById('extraRandomCallsFrom').value);
+                extraRandomCallsTo = parseInt(document.getElementById('extraRandomCallsTo').value);
+
+                if (extraRandomCallsTo < extraRandomCallsFrom || extraRandomCallsFrom < 0 || extraRandomCallsTo > 255) {
+                    throw {};
+                }
+            } catch {
+                alert('Please enter correct parameters')
+                return;
+            }
+
+
+            let data = calcForParametersRange(pellets, extraRandomCallsFrom, extraRandomCallsTo);
+
+            document.getElementById('pelletsInfo').innerText = pellets.toString();
+            drawAllDamageDistributionsStacked(data);
+            drawMaxDamagesByExtraRngCalls(data);
+
+            location.href = '#resultsTop';
+        }
+
+        function drawAllDamageDistributionsStacked(data) {
+            let datasets = [];
+            for (let i = 0; i < data.results.length; i++) {
+                let dynamicColor = Math.round(i * 255 / data.results.length);
+
+                datasets.push({
+                    label: `${data.results[i].extraRandomCalls} extra RNG calls`,
+                    data: Object.values(data.results[i].damageDistribution),
+                    backgroundColor: `rgba(255, ${dynamicColor}, 128, 1)`,
+                    borderWidth: 0
+                })
+            }
+
+            if (window.chart1) {
+                window.chart1.destroy();
+            }
+
+            window.chart1 = new Chart('damageDistributionsChart', {
+                type: 'bar',
+                data: {
+                    labels: data.possibleDamageValues,
+                    datasets
+                },
+                options: {
+                    legend: {
+                        display: false
+                    },
+                    scales: {
+                        xAxes: [{
+                            stacked: true
+                        }],
+                        yAxes: [{
+                            stacked: true
+                        }]
+                    }
+                }
+            });
+        }
+
+        function drawMaxDamagesByExtraRngCalls(data) {
+            let chartLabels = [];
+            let chartData = [];
+            for (let i = 0; i < data.results.length; i++) {
+                chartLabels.push(data.results[i].extraRandomCalls);
+                chartData.push(data.results[i].maxDamage);
+            }
+
+            let minMax = Math.min.apply(null, chartData);
+            let maxMax = Math.max.apply(null, chartData);
+
+            document.getElementById('minMaxDamage').innerText = minMax.toString();
+            document.getElementById('maxMaxDamage').innerText = maxMax.toString();
+
+            if (window.chart2) {
+                window.chart2.destroy();
+            }
+
+            window.chart2 = new Chart('maxDamagesChart', {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Max damage by extra RNG calls',
+                        data: chartData,
+                        backgroundColor: 'rgba(128, 0, 255, 1)',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    legend: {
+                        display: false
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                min: minMax - 5,
+                                max: maxMax + 5
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+
+        drawResults();
+    </script>
+
+</body>
+</html>
